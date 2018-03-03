@@ -23,7 +23,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // listen to connection that comes in
 io.on('connection', (socket) =>{
-    //console.log('New user connected');
+    console.log('New user connected');
+
+    socket.emit('newMessage', {
+        from: 'Jon',
+        text: 'Hey. What is going on.',
+        createdAt: 123323324
+    });
+
+    socket.on('createMessage', (message) =>{
+        console.log('createMessage', message);
+    });
 
     socket.on('disconnected', () =>{
         console.log('User was disconnected');
