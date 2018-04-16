@@ -12,6 +12,7 @@ function scrollToBottom (){
     let scrollHeight = messages.prop('scrollHeight');
     let newMessageHeight = newMessage.innerHeight();
     let lastMessageHeight = newMessage.prev().innerHeight();
+    //dfhgdjkfghdj
 
 
     if(clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight){
