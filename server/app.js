@@ -5,6 +5,7 @@ const socketIO = require('socket.io');
 
 
 const {generateMessage, generateLocationMessage} = require('./utils/message');
+const {isRealString} = require('./utils/validation');
 const app = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
@@ -22,6 +23,14 @@ io.on('connection', (socket) =>{
 
     // socket.broadcast.emit from Admin text new user joined
     socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
+
+    socket.on('join', (params, callback) => {
+        if(isRealString(params.name) || !isRealString(params.room)){
+            callback('Name and group are required.')
+        }
+
+        callback();
+    });
 
 
     socket.on('createMessage', (message, callback) =>{
