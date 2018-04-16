@@ -13,24 +13,30 @@ socket.on('disconnect', function(){
 
 socket.on('newMessage', function (message) {
     let formattedTime = moment(message.createdAt).format('h:mm a');
-    console.log('newMessage', message);
 
-    let li = $('<li></li>');
-    li.text(`${message.from} ${formattedTime}:  ${message.text}`);
+    let template = $('#message-template').html();
+    let html = Mustache.render(template, {
+        text: message.text,
+        from: message.from,
+        createdAt: formattedTime
+    });
 
-    $('#messages').append(li);
+
+    $('#messages').append(html);
 });
 
 socket.on('newLocationMessage', function(message){
     let formattedTime = moment(message.createdAt).format('h:mm a');
 
-    let li = $('<li></li>');
-    let a = $('<a target="_blank">My Current Location</a>');
+    let template = $('#location-message-template').html();
+    let html = Mustache.render(template, {
 
-    li.text(`${message.from} ${formattedTime}: `);
-    a.attr('href', message.url);
-    li.append(a);
-    $('#messages').append(li)
+        from: message.from,
+        url: message.url,
+        createdAt: formattedTime
+    });
+
+     $('#messages').append(html)
 });
 
 
@@ -49,26 +55,29 @@ $('#message-form').on('submit', function (e) {
 });
 
 const locationButton = $('#send-location');
-locationButton.on('click', function(){
+    locationButton.on('click', function(){
     if(!navigator.geolocation){
         return alert('Geolocation not supported by your browser');
     }
+    //
+    // locationButton.disabled = true;
+    // locationButton.innerHTML = 'Sending Location';
 
-    locationButton.disabled = true;
-    locationButton.innerHTML = 'Sending Location';
-
+    locationButton.attr('disabled', 'disabled').text('Sending location...');
 
     navigator.geolocation.getCurrentPosition(function(position){
-        locationButton.disabled = false;
-        locationButton.innerHTML = 'Send Location';
+        // locationButton.disabled = false;
+        // locationButton.innerHTML = 'Send Location';
+        locationButton.removeAttr('disabled').text('Send location');
         socket.emit('createLocationMessage', {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
         });
     }, function(){
-        locationButton.disabled = false;
-        locationButton.innerHTML = 'Send Location';
+        // locationButton.disabled = false;
+        // locationButton.innerHTML = 'Send Location';
+        locationButton.removeAttr('disabled').text('Send location');
         alert('Unable to fetch location.');
-    })
+    });
 });
 
