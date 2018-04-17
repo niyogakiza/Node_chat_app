@@ -42,7 +42,13 @@ socket.on('disconnect', function(){
 });
 
 socket.on('updateUserList', function (users){
-    console.log('Users list', users);
+    let ol = $('<ol></ol>');
+
+    users.forEach(function(user){
+        ol.append($('<li></li>').text(user));
+    });
+    $('#users').html(ol);
+    //console.log('Users list', users);
 });
 
 socket.on('newMessage', function (message) {
@@ -82,7 +88,6 @@ $('#message-form').on('submit', function (e) {
     let messageTextbox = $('[name=message]');
 
     socket.emit('createMessage',{
-        from:'User',
         text: messageTextbox.val()
     }, function () {
         messageTextbox.val('')

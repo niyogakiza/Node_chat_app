@@ -13,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const io = socketIO(server);
-let users = new users();
+let users = new Users();
 
 
 app.use(express.static(path.join(__dirname, '../public')));
@@ -48,18 +48,34 @@ io.on('connection', (socket) =>{
 
 
     socket.on('createMessage', (message, callback) =>{
-        console.log('createMessage', message);
+        //console.log('createMessage', message);
+        let user = users.getUser(socket.id);
+        if(user && isRealString(message.text)){
+            io.to(user.room).emit('newMessage', generateMessage(user.name, message.text));
+        }
 
-        io.emit('newMessage', generateMessage(message.from, message.text));
         callback();
 
     });
 
     socket.on('createLocationMessage', (coords) => {
-        io.emit('newMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude))
+
+        let user = users.getUser(socket.id);
+
+        if(user){
+            io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+        }
+
     });
 
-    socket.on('disconnected', () =>{
+    socket.on('disconnect', () =>{
+        let user = users.removeUser(socket.id);
+
+        if(user){
+            io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+            io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has left`));
+        }
+
         console.log('User was disconnected');
     });
 });
