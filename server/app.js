@@ -6,10 +6,14 @@ const socketIO = require('socket.io');
 
 const {generateMessage, generateLocationMessage} = require('./utils/message');
 const {isRealString} = require('./utils/validation');
+const {Users} = require('./utils/users');
+
+
 const app = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const io = socketIO(server);
+let users = new users();
 
 
 app.use(express.static(path.join(__dirname, '../public')));
@@ -18,16 +22,26 @@ app.use(express.static(path.join(__dirname, '../public')));
 io.on('connection', (socket) =>{
     console.log('New user connected');
 
-    //socket.emit from Admin text Welcome to the chat app
-    socket.emit('newMessage',generateMessage('Admin', 'Welcome to the chat app'));
-
-    // socket.broadcast.emit from Admin text new user joined
-    socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
-
     socket.on('join', (params, callback) => {
-        if(isRealString(params.name) || !isRealString(params.room)){
-            callback('Name and group are required.')
+        if(!isRealString(params.name) || !isRealString(params.room)){
+           return callback('Name and group are required.')
         }
+
+        socket.join(params.room);
+        users.removeUser(socket.id);
+        users.addUser(socket.id, params.name, params.room);
+
+        io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+        //socket.leave('The office fans')
+        //io.emit -> io.to('The office fans').emit
+        //socket.broadcast.emit -> socket.broadcast.to('The office Fans').emit
+        //socket.emit
+
+        //socket.emit from Admin text Welcome to the chat app
+        socket.emit('newMessage',generateMessage('Admin', 'Welcome to the chat app'));
+
+        // socket.broadcast.emit from Admin text new user joined
+        socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined`));
 
         callback();
     });
